@@ -1,38 +1,21 @@
 import datetime, re, requests, urllib, glob, os, logging, redditd, random, string
-from bs4 import BeautifulSoup
+from util import downloadImage
 from collections import namedtuple
 
+pattern = re.compile(r'(http://i.imgur.com/(.*))(\?.*)?')
+
 ImgurImage = namedtuple('ImgurImage', 'url filename')
+
+def url_match():
+    pass
 
 def getImage(submission, targetSubreddit):
     image = findImage(targetSubreddit, submission)
     if image != None:
         return downloadImage(targetSubreddit, submission, image.url, image.filename)
     else:
-        return False
+        return None
 
-def downloadImage(targetSubreddit, submission, imageUrl, localFileName):
-    filedir = "downloads" + "/" + targetSubreddit + "/"
-    #filedir += str(submission.author) + "/"
-    filepath = filedir + localFileName
-    try:
-        if os.path.isfile(filepath):
-            #logging.info("Found duplicate at %s", filepath)
-            return True
-        else:
-            if not os.path.exists(filedir):
-                os.makedirs(filedir)
-            response = urllib.urlopen(imageUrl)
-            if(response.getcode() == 200):
-                urllib.urlretrieve(imageUrl, filepath)
-                return True
-            else:
-                return False
-    except Exception as exception:
-        logging.error(exception)
-        return False
-
-#Worker process function
 def findImage(targetSubreddit, submission):
     imgurUrlPattern = re.compile(r'(http://i.imgur.com/(.*))(\?.*)?')
     imageUrl = None
