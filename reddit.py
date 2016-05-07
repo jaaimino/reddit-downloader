@@ -17,10 +17,9 @@ def getSubmissionsFromDaysAgo(targetSubreddit, daysAgo, limit=25, feed_type="hot
         upper = unix_time(now3)
         #query = '(and author:"%s" (and timestamp:%d..%d))' % (usermode, lower, upper)
         query = 'timestamp:%d..%d' % (lower, upper)
-        r = praw.Reddit(user_agent='CHANGE THIS TO A UNIQUE VALUE') # Note: Be sure to change the user-agent to something unique.
+        r = praw.Reddit(user_agent='redditd') # Note: Be sure to change the user-agent to something unique.
         searchresults = list(r.search(query, subreddit=targetSubreddit, sort=feed_type, limit=limit, syntax='cloudsearch'))
         return searchresults
-        #print len(searchresults)
     except Exception as exception:
-        print exception
+        #print exception
         return []

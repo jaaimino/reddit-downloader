@@ -1,4 +1,4 @@
-import time, random, os, datetime, sys, reddit, logging, itertools, ConfigParser, importlib
+import time, random, os, datetime, sys, reddit, logging, itertools, ConfigParser, importlib, json
 from multiprocessing import Process, Queue, current_process, freeze_support, cpu_count, Pool
 imgur = importlib.import_module('modules.imgur')
 
@@ -17,19 +17,31 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+def write_progress(targetSubreddit, days_ago, count_left):
+    file_name = "downloads/" + targetSubreddit + "/progress.json"
+    data = {"days_ago" : days_ago, "count_left" : count_left}
+    with open(file_name, 'w+') as fp:
+        json.dump(data, fp)
+
 def getImgurImages(targetSubreddit, limit=25, feed_type="hot"):
     logging.info("[ --- Searching %s most recent %s posts from %s for imgur files --- ]", limit, feed_type, targetSubreddit)
     daysAgo = 0
     count = limit
+    
+    file_name = "downloads/" + targetSubreddit + "/progress.json"
+    if os.path.exists(file_name):
+        with open(file_name) as json_file:
+            json_data = json.load(json_file)
+            daysAgo = json_data["days_ago"]
 
     while count > 0:
-        #submissions = reddit.get_submissions(targetSubreddit, count, feed_type)
         submissions = reddit.getSubmissionsFromDaysAgo(targetSubreddit, daysAgo, count, feed_type)
         for submission in submissions:
             result = imgur.getImage(submission, targetSubreddit)
             if result:
                 count -= 1
         daysAgo+=1
+        write_progress(targetSubreddit, daysAgo, count)
 
 def main():
     if len(sys.argv) >= 3:
@@ -40,7 +52,7 @@ def main():
             feed_type = sys.argv[3]
         getImgurImages(targetSubreddit, limit, feed_type)
     else:
-        print "Usage: python redditd.py (targetSubreddit) (Limit) (new/hot/rising)"
+        print "Usage: python redditd.py (targetSubreddit) (count) (new/hot/rising)"
         exit(0)
 
 if __name__ == '__main__':
